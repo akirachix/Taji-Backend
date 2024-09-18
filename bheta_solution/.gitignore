@@ -1,0 +1,47 @@
+# Python Bytecode Files
+__pycache__/
+*.py[cod]
+# Django Stuff
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+# Environment Files
+.env
+*.env
+# Virtual Environment
+venv/
+env/
+.env/
+venv.bak/
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+# PyCharm
+.idea/
+# VS Code
+.vscode/
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+Desktop.ini
+# Coverage Reports
+htmlcov/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+# Build
+build/
+dist/
+*.egg-info/
+.eggs/
