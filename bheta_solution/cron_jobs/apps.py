@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class PharmacyConfig(AppConfig):
+class CronJobsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'pharmacy'
+    name = 'cron_jobs'

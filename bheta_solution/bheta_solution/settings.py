@@ -32,6 +32,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+CRONJOBS = [
+    ('0 0 */5 * *', 'cron_jobs.tasks.get_data_from_ppb'),
+]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,10 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'pharmacy',
     'api',
     'rest_framework',
-    'upload_image',
+    'cron_jobs',
+    'django_crontab',
     
 
 ]
