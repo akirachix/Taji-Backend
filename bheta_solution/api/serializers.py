@@ -1,7 +1,21 @@
 from rest_framework import serializers
-from cron_jobs.models import PPBData
+from image__upload.models import ImageUpload,  DrugRecord
+from pharmacies.models import Pharmacy
 
-class PPBDataSerializer(serializers.ModelSerializer):
+
+class ImageUploadSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PPBData
+        model = ImageUpload
         fields = "__all__"
+        
+
+class PharmacySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pharmacy
+        fields = '__all__'
+
+
+class DrugRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DrugRecord
+        fields = '__all__'
