@@ -32,6 +32,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+
+CRONJOBS = [
+('50 15 */5 * *', 'cron_jobs.cron.cron_scrape_and_save')
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,6 +49,8 @@ INSTALLED_APPS = [
     'api',
     'pharmacies',
     'image__upload',
+    'recall_drugs',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [

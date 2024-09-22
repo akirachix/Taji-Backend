@@ -1,7 +1,7 @@
-from django.test import TestCase
 from unittest.mock import patch
-from .models import ImageUpload, DrugRecord
+from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import ImageUpload, DrugRecord
 import datetime
 
 class ImageUploadModelTest(TestCase):

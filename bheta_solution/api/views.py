@@ -1,18 +1,19 @@
+import re
+import imghdr
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from google.cloud import vision_v1
 from google.api_core.exceptions import GoogleAPIError
-import re
-from django.http import JsonResponse
 from image__upload.models import ImageUpload, DrugRecord
-from .serializers import PharmacySerializer, ImageUploadSerializer
 from pharmacies.models import Pharmacy
-import imghdr
+from recall_drugs.models import PPBData
+from .serializers import PPBDataSerializer
+from .serializers import PharmacySerializer
 
-MAX_IMAGE_SIZE = 5 * 1024 * 1024  
 
+MAX_IMAGE_SIZE = 5 * 1024 * 1024 
 def is_valid_image(file):
     """Check if the image file is valid (JPEG, PNG, GIF)."""
     file_type = imghdr.what(file)
@@ -146,3 +147,11 @@ class PharmacyDetailView(APIView):
         data['directions_url'] = directions_url
         
         return Response(data)
+    
+class PpbDataListView(APIView):
+    
+    def get(self, request):
+        data = PPBData.objects.all() 
+        serializer =PPBDataSerializer(data, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
