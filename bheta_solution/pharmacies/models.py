@@ -2,6 +2,10 @@ from django.db import models
 from .utils import geocode_address
 from django.db.models import F
 from geopy.distance import geodesic
+import requests
+
+
+
 
 
 class Pharmacy(models.Model):
@@ -10,6 +14,8 @@ class Pharmacy(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     license_status = models.CharField(max_length=255)
+    reported=models.BooleanField(max_length=100)
+
 
     def save(self, *args, **kwargs):
         if not self.latitude or not self.longitude:
@@ -22,6 +28,15 @@ class Pharmacy(models.Model):
 
     def __str__(self):
         return self.name
+
+
+    def geocode_address(address, api_key):
+     response = requests.get( f'https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={api_key}' ) 
+     if response.status_code == 200: data = response.json() 
+     if data['results']: 
+        location = data['results'][0]['geometry']['location'] 
+        return location['lat'], location['lng'] 
+     return None, None    
 
     @staticmethod
     def get_nearby_pharmacies(user_latitude, user_longitude, radius_km=3):
