@@ -1,3 +1,4 @@
+import dj_database_url
 """
 Django settings for bheta_solution project.
 
@@ -12,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 load_dotenv()
 
@@ -29,8 +30,7 @@ SECRET_KEY = 'django-insecure-3b%wy40!(7c#)-kp0g1s#l_p&-flki&5i4%k!agj0gc(k4hcea
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 
 CRONJOBS = [
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'pharmacies',
     'image__upload',
     'recall_drugs',
+    'corsheaders',
     'django_crontab',
 ]
 
@@ -57,11 +58,17 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
+
+CORS_ORIGIN_ALLOW_ALl = True
+
+
 
 ROOT_URLCONF = 'bheta_solution.urls'
 
@@ -91,7 +98,7 @@ WSGI_APPLICATION = 'bheta_solution.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'), 
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -131,8 +138,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
