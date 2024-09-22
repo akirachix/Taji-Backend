@@ -1,3 +1,5 @@
+
+
 import re
 import imghdr
 from rest_framework import status
@@ -5,15 +7,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from google.cloud import vision_v1
+from django.db.models import Q
 from google.api_core.exceptions import GoogleAPIError
 from image__upload.models import ImageUpload, DrugRecord
 from pharmacies.models import Pharmacy
 from recall_drugs.models import PPBData
-from .serializers import PPBDataSerializer
-from .serializers import PharmacySerializer
-
+from .serializers import PPBDataSerializer, PharmacySerializer
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
+
 def is_valid_image(file):
     """Check if the image file is valid (JPEG, PNG, GIF)."""
     file_type = imghdr.what(file)
@@ -37,7 +39,6 @@ def extract_batch_number_from_image(image_file):
     except Exception as e:
         raise ValueError(f"Failed to process image: {str(e)}") from e
 
-    
     patterns = [
         r"Batch No\.\s*(\d+)",
         r'B\.?\s*No\.?\s*:?\s*([A-Z0-9]+)', 
@@ -68,8 +69,6 @@ def extract_batch_number_from_image(image_file):
 
     combined_pattern = r'|'.join(patterns)
     matches = re.findall(combined_pattern, extracted_text, re.IGNORECASE)
-
-   
     return matches[0][0] if matches else None
 
 class ImageUploadView(APIView):
@@ -88,19 +87,15 @@ class ImageUploadView(APIView):
             return Response({"error": "Invalid image file type"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-        
             batch_number = extract_batch_number_from_image(image_file)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-      
         ImageUpload.objects.create(image_file=image_file)
 
-    
         if batch_number:
             drug_record = DrugRecord.objects.filter(batch_number__iexact=batch_number.strip()).first()
             if drug_record:
-             
                 return Response({
                     "Batch_number": batch_number,
                     "Drug_name": drug_record.drug_name,
@@ -109,19 +104,26 @@ class ImageUploadView(APIView):
                     "Reason_for_Recall": drug_record.reason_for_recall,
                 }, status=status.HTTP_200_OK)
             else:
-               
                 return Response({"message": "The drug is safe to use."}, status=status.HTTP_200_OK)
         else:
-           
             return Response({"error": "Batch number not valid"}, status=status.HTTP_404_NOT_FOUND)
 
-
-
 class PharmacyListView(APIView):
+    
     def get(self, request):
-        pharmacies = Pharmacy.objects.all()
+        reported = request.query_params.get('reported')
+        query = Q()
+        if reported is not None:
+            if reported.lower() == 'true':
+                query &= Q(reported=True)
+            elif reported.lower() == 'false':
+                query &= Q(reported=False)
+            
+        pharmacies = Pharmacy.objects.filter(query)
         serializer = PharmacySerializer(pharmacies, many=True)
         return Response(serializer.data)
+
+
 
     def post(self, request):
         serializer = PharmacySerializer(data=request.data)
@@ -147,11 +149,9 @@ class PharmacyDetailView(APIView):
         data['directions_url'] = directions_url
         
         return Response(data)
-    
+
 class PpbDataListView(APIView):
-    
     def get(self, request):
         data = PPBData.objects.all() 
-        serializer =PPBDataSerializer(data, many=True)
+        serializer = PPBDataSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
