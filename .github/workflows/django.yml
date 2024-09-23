@@ -20,7 +20,7 @@ jobs:
           git remote -v
       - name: Set Heroku buildpack
         run: |
-          heroku buildpacks:set heroku/python -a bheta_solution
+          heroku buildpacks:set heroku/python -a bheta-solution
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       - name: Deploy to Heroku
