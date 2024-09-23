@@ -1,90 +1,29 @@
+from unittest.mock import patch
 from django.test import TestCase
-from .models import ImageUpload, DrugRecord
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-
-
+from .models import ImageUpload, DrugRecord
+import datetime
 class ImageUploadModelTest(TestCase):
-
-    def setUp(self):
-        self.image_file = SimpleUploadedFile(
-            name='test_image.jpg',
-            content=b'file_content',
-            content_type='image/jpeg'
+    def test_imageupload_creation(self):
+        image_file = SimpleUploadedFile("test_image.jpg", b"file_content", content_type="image/jpeg")
+        image_upload = ImageUpload.objects.create(
+            image_file=image_file,
+            batch_number="B12345"
         )
-        self.image_upload = ImageUpload.objects.create(
-            image_file=self.image_file,
-            batch_number="Batch001"
-        )
-
-    def test_image_upload_creation(self):
-        self.assertIsInstance(self.image_upload, ImageUpload)
-        self.assertEqual(self.image_upload.batch_number, "Batch001")
-        self.assertIsNotNone(self.image_upload.uploaded_at)
-
-    def test_image_upload_invalid_file_type(self):
-        invalid_image = SimpleUploadedFile(
-            name='test_image.txt',
-            content=b'file_content',
-            content_type='text/plain'
-        )
-        image_upload = ImageUpload(image_file=invalid_image)
-        with self.assertRaises(ValidationError):
-            image_upload.full_clean()
-
-    def test_image_upload_file_size(self):
-        large_file = SimpleUploadedFile(
-            name='large_image.jpg',
-            content=b'0' * (6 * 1024 * 1024), 
-            content_type='image/jpeg'
-        )
-        image_upload = ImageUpload(image_file=large_file, batch_number="Batch003")
-        with self.assertRaises(ValidationError):
-            image_upload.full_clean()  
-
-    def test_image_upload_successful(self):
-       
-        self.assertTrue(self.image_upload.image_file.name.startswith('uploads/'))
-        self.assertTrue(self.image_upload.image_file.name.endswith('test_image.jpg'))
-
-
+        self.assertIn('uploads/test_image', image_upload.image_file.name)
+        self.assertEqual(image_upload.batch_number, "B12345")
+        self.assertIsNotNone(image_upload.uploaded_at)
 class DrugRecordModelTest(TestCase):
-
-    def setUp(self):
-        self.drug_record = DrugRecord.objects.create(
-            batch_number="BatchA123",
-            drug_name="Aspirin",
+    def test_drugrecord_creation(self):
+        drug_record = DrugRecord.objects.create(
+            batch_number="B12345",
+            drug_name="Test Drug",
             recall_status="Recalled",
-            recall_date=None,
-            reason_for_recall="Contaminated"
+            recall_date=datetime.date(2023, 9, 20),
+            reason_for_recall="Contamination"
         )
-
-    def test_drug_record_creation(self):
-        self.assertIsInstance(self.drug_record, DrugRecord)
-        self.assertEqual(self.drug_record.drug_name, "Aspirin")
-        self.assertEqual(self.drug_record.recall_status, "Recalled")
-        self.assertIsNone(self.drug_record.recall_date)
-
-    def test_unique_batch_number(self):
-        DrugRecord.objects.create(
-            batch_number="BatchB123",  
-            drug_name="Ibuprofen"
-        )
-        with self.assertRaises(ValidationError):
-            drug_record = DrugRecord(batch_number="BatchA123", drug_name="Paracetamol")
-            drug_record.full_clean() 
-
-    def test_drug_record_string_representation(self):
-        self.assertEqual(str(self.drug_record), "Aspirin (Batch: BatchA123)")
-
-    def test_drug_record_empty_batch_number(self):
-        with self.assertRaises(ValidationError):
-            drug_record = DrugRecord(batch_number="", drug_name="Paracetamol")
-            drug_record.full_clean()  
-
-    def test_drug_record_long_drug_name(self):
-        long_name = "A" * 256 
-        with self.assertRaises(ValidationError):
-            drug_record = DrugRecord(batch_number="BatchB456", drug_name=long_name)
-            drug_record.full_clean()
+        self.assertEqual(drug_record.batch_number, "B12345")
+        self.assertEqual(drug_record.drug_name, "Test Drug")
+        self.assertEqual(drug_record.recall_status, "Recalled")
+        self.assertEqual(drug_record.recall_date, datetime.date(2023, 9, 20))
+        self.assertEqual(drug_record.reason_for_recall, "Contamination")

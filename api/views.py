@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from google.cloud import vision_v1
+from google.cloud import vision
 from django.db.models import Q
 from google.api_core.exceptions import GoogleAPIError
 from image__upload.models import ImageUpload, DrugRecord
