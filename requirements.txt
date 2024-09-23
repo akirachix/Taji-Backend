@@ -20,11 +20,6 @@ fs==2.4.12
 geographiclib==2.0
 geopy==2.4.1
 google-api-core==2.20.0
-google-auth==2.35.0
-google-cloud==0.34.0
-google-cloud-vision==3.7.4
-googleapis-common-protos==1.65.0
-grpcio==1.66.1
 grpcio-status==1.66.1
 gunicorn==23.0.0
 html5lib==1.1
