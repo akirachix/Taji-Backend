@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import PpbDataListView
 from .views import (
     ImageUploadView,
     PharmacyListView,
     PharmacyDetailView,
+    PpbDataListView,
 )
 from .pharmacy_views import get_nearby_pharmacies 
 
