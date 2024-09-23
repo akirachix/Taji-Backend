@@ -18,7 +18,6 @@ jobs:
       - name: Set up Git remote for Heroku
         run: |
           git remote -v
-          git remote add heroku https://git.heroku.com/bheta-solution.git || echo "Heroku remote already exists"
       - name: Set Heroku buildpack
         run: |
           heroku buildpacks:set heroku/python -a bheta_solution
