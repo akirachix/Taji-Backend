@@ -14,6 +14,7 @@ from pharmacies.models import Pharmacy
 from recall_drugs.models import PPBData
 from .serializers import ImageUploadSerializer
 from .serializers import PPBDataSerializer, PharmacySerializer
+from django.conf import settings
 
 GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
 credentials =  vision.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
