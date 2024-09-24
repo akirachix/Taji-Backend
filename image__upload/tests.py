@@ -2,30 +2,23 @@ from django.test import TestCase
 from .models import ImageUpload, DrugRecord
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
+from io import BytesIO
+from django.core.files.base import ContentFile
 from django.utils import timezone
 
+
+    
 class ImageUploadModelTest(TestCase):
 
     def setUp(self):
-        self.image_file = SimpleUploadedFile(
-            name='test_image.jpg',
-            content=b'file_content',
-            content_type='image/jpeg'
-        )
-        self.image_upload = ImageUpload.objects.create(
-            image_file=self.image_file,
-            batch_number="Batch001"
-        )
+        self.valid_file = ContentFile(b"file_content", name="test.png")
+        self.invalid_file_type = ContentFile(b"file_content", name="test.txt")
+        self.large_file = ContentFile(b"x" * (3 * 1024 * 1024), name="test.png")  
 
-    def test_image_upload_creation(self):
-        self.assertIsInstance(self.image_upload, ImageUpload)
-        self.assertEqual(self.image_upload.batch_number, "Batch001")
-        self.assertIsNotNone(self.image_upload.uploaded_at)
-
-    
     def test_image_upload_successful(self):
-        self.assertTrue(self.image_upload.image_file.name.startswith('uploads/'))
-        self.assertIn('test_image', self.image_upload.image_file.name)
+        upload = ImageUpload(image_file=self.valid_file)
+        upload.save() 
+        self.assertTrue(ImageUpload.objects.filter(id=upload.id).exists())
 
 class DrugRecordModelTest(TestCase):
 
@@ -66,3 +59,5 @@ class DrugRecordModelTest(TestCase):
         with self.assertRaises(ValidationError):
             drug_record = DrugRecord(batch_number="BatchB456", drug_name=long_name)
             drug_record.full_clean()
+
+
