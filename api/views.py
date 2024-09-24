@@ -15,6 +15,9 @@ from recall_drugs.models import PPBData
 from .serializers import ImageUploadSerializer
 from .serializers import PPBDataSerializer, PharmacySerializer
 
+GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
+credentials =  vision.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
+
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
 
 def is_valid_image(file):
