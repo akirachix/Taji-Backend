@@ -152,7 +152,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-DEFAULT_VALUE =  json.dmps({"type":"one"})
+DEFAULT_VALUE =  json.dumps({"type":"one"})
 
 
 GOOGLE_VISION_CREDENTIALS = os.getenv('GOOGLE_VISION_CREDENTIALS',DEFAULT_VALUE)
