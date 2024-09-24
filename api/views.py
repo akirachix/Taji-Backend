@@ -6,12 +6,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from google.cloud import vision_v1
+from google.cloud import vision
 from django.db.models import Q
 from google.api_core.exceptions import GoogleAPIError
 from image__upload.models import ImageUpload, DrugRecord
 from pharmacies.models import Pharmacy
 from recall_drugs.models import PPBData
+from .serializers import ImageUploadSerializer
 from .serializers import PPBDataSerializer, PharmacySerializer
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
@@ -107,6 +108,14 @@ class ImageUploadView(APIView):
                 return Response({"message": "The drug is safe to use."}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Batch number not valid"}, status=status.HTTP_404_NOT_FOUND)
+        
+    def get(self, request):
+        data = ImageUpload.objects.all() 
+        serializer = ImageUploadSerializer(data, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    
 
 class PharmacyListView(APIView):
     

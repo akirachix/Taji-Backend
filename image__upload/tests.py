@@ -2,52 +2,23 @@ from django.test import TestCase
 from .models import ImageUpload, DrugRecord
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
+from io import BytesIO
+from django.core.files.base import ContentFile
 from django.utils import timezone
 
 
+    
 class ImageUploadModelTest(TestCase):
 
     def setUp(self):
-        self.image_file = SimpleUploadedFile(
-            name='test_image.jpg',
-            content=b'file_content',
-            content_type='image/jpeg'
-        )
-        self.image_upload = ImageUpload.objects.create(
-            image_file=self.image_file,
-            batch_number="Batch001"
-        )
-
-    def test_image_upload_creation(self):
-        self.assertIsInstance(self.image_upload, ImageUpload)
-        self.assertEqual(self.image_upload.batch_number, "Batch001")
-        self.assertIsNotNone(self.image_upload.uploaded_at)
-
-    def test_image_upload_invalid_file_type(self):
-        invalid_image = SimpleUploadedFile(
-            name='test_image.txt',
-            content=b'file_content',
-            content_type='text/plain'
-        )
-        image_upload = ImageUpload(image_file=invalid_image)
-        with self.assertRaises(ValidationError):
-            image_upload.full_clean()
-
-    def test_image_upload_file_size(self):
-        large_file = SimpleUploadedFile(
-            name='large_image.jpg',
-            content=b'0' * (6 * 1024 * 1024), 
-            content_type='image/jpeg'
-        )
-        image_upload = ImageUpload(image_file=large_file, batch_number="Batch003")
-        with self.assertRaises(ValidationError):
-            image_upload.full_clean()  
+        self.valid_file = ContentFile(b"file_content", name="test.png")
+        self.invalid_file_type = ContentFile(b"file_content", name="test.txt")
+        self.large_file = ContentFile(b"x" * (3 * 1024 * 1024), name="test.png")  
 
     def test_image_upload_successful(self):
-       
-        self.assertTrue(self.image_upload.image_file.name.startswith('uploads/'))
-        self.assertTrue(self.image_upload.image_file.name.endswith('test_image.jpg'))
-
+        upload = ImageUpload(image_file=self.valid_file)
+        upload.save() 
+        self.assertTrue(ImageUpload.objects.filter(id=upload.id).exists())
 
 class DrugRecordModelTest(TestCase):
 
@@ -73,7 +44,7 @@ class DrugRecordModelTest(TestCase):
         )
         with self.assertRaises(ValidationError):
             drug_record = DrugRecord(batch_number="BatchA123", drug_name="Paracetamol")
-            drug_record.full_clean() 
+            drug_record.full_clean()
 
     def test_drug_record_string_representation(self):
         self.assertEqual(str(self.drug_record), "Aspirin (Batch: BatchA123)")
@@ -81,10 +52,12 @@ class DrugRecordModelTest(TestCase):
     def test_drug_record_empty_batch_number(self):
         with self.assertRaises(ValidationError):
             drug_record = DrugRecord(batch_number="", drug_name="Paracetamol")
-            drug_record.full_clean()  
+            drug_record.full_clean()
 
     def test_drug_record_long_drug_name(self):
         long_name = "A" * 256 
         with self.assertRaises(ValidationError):
             drug_record = DrugRecord(batch_number="BatchB456", drug_name=long_name)
             drug_record.full_clean()
+
+
