@@ -161,6 +161,7 @@ if GOOGLE_VISION_CREDENTIALS:
 
 
 
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ENV_FILE = find_dotenv()

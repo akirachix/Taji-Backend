@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from google.cloud import vision
+from google.cloud import vision_v1
 from django.db.models import Q
 from google.api_core.exceptions import GoogleAPIError
 from image__upload.models import ImageUpload, DrugRecord
@@ -17,7 +17,7 @@ from .serializers import PPBDataSerializer, PharmacySerializer
 from django.conf import settings
 
 GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
-credentials =  vision.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
+credentials =  vision_v1.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
 
@@ -99,14 +99,14 @@ class ImageUploadView(APIView):
         ImageUpload.objects.create(image_file=image_file)
 
         if batch_number:
-            drug_record = DrugRecord.objects.filter(batch_number__iexact=batch_number.strip()).first()
+            ppb_record = PPBData.objects.filter(batch_number__iexact=batch_number.strip()).first()
             if drug_record:
                 return Response({
                     "Batch_number": batch_number,
-                    "Drug_name": drug_record.drug_name,
+                    "Drug_name": ppb_record.drug_name,
                     "Recall_status": "Recalled",
-                    "Recall_date": drug_record.recall_date,
-                    "Reason_for_Recall": drug_record.reason_for_recall,
+                    "Recall_date": ppb_record.recall_date,
+                    "Reason_for_Recall": ppb_record.reason_for_recall,
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({"message": "The drug is safe to use."}, status=status.HTTP_200_OK)
