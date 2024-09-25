@@ -17,7 +17,7 @@ def extract_batch_number_from_image(image_file):
     client = vision_v1.ImageAnnotatorClient()
 
     try:
-        processed_image_path = preprocess_image(image_file.filename)  # Ensure this function is defined above
+        processed_image_path = preprocess_image(image_file.filename)  
 
         with open(processed_image_path, 'rb') as img_file:
             content = img_file.read()
@@ -30,7 +30,7 @@ def extract_batch_number_from_image(image_file):
 
         extracted_text = response.text_annotations[0].description if response.text_annotations else ""
         
-        print("Extracted Text:", extracted_text)  # Debugging
+        print("Extracted Text:", extracted_text) 
 
         patterns = [
         r"Batch No\.\s*(\d+)",
