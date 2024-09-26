@@ -15,6 +15,17 @@ from recall_drugs.models import PPBData
 from .serializers import ImageUploadSerializer
 from .serializers import PPBDataSerializer, PharmacySerializer
 from django.conf import settings
+from user.models import User
+import logging
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UserSerializer
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+
+
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
 credentials =  vision_v1.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
@@ -168,3 +179,59 @@ class PpbDataListView(APIView):
         data = PPBData.objects.all() 
         serializer = PPBDataSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class UserListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        logger.info("Retrieved user list.")
+        return Response(serializer.data, status=status.HTTP_200_OK)
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            logger.error(f'User with ID {id} not found.')
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user)
+        logger.info(f'User with ID {id} retrieved successfully.')
+        return Response(serializer.data)
+    
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            logger.info(f'User registered successfully: {user.email}')
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        logger.error(f'User registration failed: {serializer.errors}')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+User = get_user_model()
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            logger.info(f'Login attempt for non-existent user: {email}')
+            return Response({
+                'error': 'User does not exist',
+                'signup_required': True
+            }, status=status.HTTP_404_NOT_FOUND)
+        django_user = authenticate(username=email, password=password)
+        if django_user:
+            logger.info(f'User logged in successfully: {email}')
+            return Response({}, status=status.HTTP_200_OK)
+        logger.error(f'Login failed for user: {email}')
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

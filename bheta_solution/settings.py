@@ -54,6 +54,13 @@ INSTALLED_APPS = [
     'recall_drugs',
     'corsheaders',
     'django_crontab',
+    'user',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'django.contrib',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -66,9 +73,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
-CORS_ORIGIN_ALLOW_ALl = True
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+SITE_ID = 1
 
 
 
