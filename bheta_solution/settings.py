@@ -56,11 +56,7 @@ INSTALLED_APPS = [
     'django_crontab',
     'user',
     'django.contrib.sites',
-    'allauth',
-    'allauth.account',
-    'django.contrib',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    
 ]
 
 MIDDLEWARE = [
