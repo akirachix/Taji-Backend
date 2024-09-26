@@ -111,7 +111,7 @@ class ImageUploadView(APIView):
 
         if batch_number:
             ppb_record = PPBData.objects.filter(batch_number__iexact=batch_number.strip()).first()
-            if drug_record:
+            if ppb_record:
                 return Response({
                     "Batch_number": batch_number,
                     "Drug_name": ppb_record.drug_name,
