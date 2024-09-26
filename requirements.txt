@@ -11,6 +11,7 @@ Django==5.0.7
 django-cors-headers==4.4.0
 django-crontab==0.7.1
 django-heroku==0.3.1
+django-allauth==64.2.0
 djangorestframework==3.15.2
 fasteners==0.14.1
 fonttools==4.53.1
