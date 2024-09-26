@@ -22,6 +22,11 @@ from .serializers import UserSerializer
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from datetime import timedelta  
+from django.utils import timezone
+from django.db.models import Count, Q 
+
+
 
 
 
@@ -111,7 +116,7 @@ class ImageUploadView(APIView):
 
         if batch_number:
             ppb_record = PPBData.objects.filter(batch_number__iexact=batch_number.strip()).first()
-            if drug_record:
+            if ppb_record:
                 return Response({
                     "Batch_number": batch_number,
                     "Drug_name": ppb_record.drug_name,
@@ -129,6 +134,21 @@ class ImageUploadView(APIView):
         serializer = ImageUploadSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class UploadStatusView(APIView):
+    def get(self, request):
+        now = timezone.now()
+
+        
+        uploads = ImageUpload.objects.aggregate(
+            total_uploads=Count('id'),
+            daily_uploads=Count('id', filter=Q(uploaded_at__date=now.date())),
+            weekly_uploads=Count('id', filter=Q(uploaded_at__gte=now - timezone.timedelta(days=7))),
+            monthly_uploads=Count('id', filter=Q(uploaded_at__month=now.month)),
+            yearly_uploads=Count('id', filter=Q(uploaded_at__year=now.year)),
+        )
+
+        return Response(uploads, status=status.HTTP_200_OK)
 
     
 
