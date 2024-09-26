@@ -22,6 +22,10 @@ from .serializers import UserSerializer
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from datetime import timedelta  
+from django.utils import timezone
+
+
 
 
 
@@ -129,6 +133,24 @@ class ImageUploadView(APIView):
         serializer = ImageUploadSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class UploadStatsView(APIView):
+    def get(self, request):
+        now = timezone.now()
+
+        total_uploads = ImageUpload.objects.count()
+        daily_uploads = ImageUpload.objects.filter(uploaded_at__date=now.date()).count()
+        weekly_uploads = ImageUpload.objects.filter(uploaded_at__gte=now - timedelta(weeks=1)).count()
+        monthly_uploads = ImageUpload.objects.filter(uploaded_at__month=now.month).count()
+        yearly_uploads = ImageUpload.objects.filter(uploaded_at__year=now.year).count()  
+
+        return Response({
+            "total_uploads": total_uploads,
+            "daily_uploads": daily_uploads,
+            "weekly_uploads": weekly_uploads,
+            "monthly_uploads": monthly_uploads,
+            "yearly_uploads": yearly_uploads,
+        }, status=status.HTTP_200_OK)
 
     
 

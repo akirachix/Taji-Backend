@@ -7,6 +7,7 @@ from .views import (
 )
 from .pharmacy_views import get_nearby_pharmacies 
 from .views import UserListView, UserDetailView, RegisterView, LoginView
+from .views import UploadStatsView
 
 urlpatterns = [
     path('image-upload/', ImageUploadView.as_view(), name='image-upload'),
@@ -22,5 +23,7 @@ urlpatterns = [
     path('users/<int:id>/', UserDetailView.as_view(), name='user-detail'),
     path('users/register/', RegisterView.as_view(), name='user-register'),
     path('users/login/', LoginView.as_view(), name='user-login'),
+
+     path('upload-stats/', UploadStatsView.as_view(), name='upload-stats'), 
 
 ]
