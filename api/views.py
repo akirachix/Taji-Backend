@@ -134,7 +134,7 @@ class ImageUploadView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UploadStatsView(APIView):
+class UploadStatusView(APIView):
     def get(self, request):
         now = timezone.now()
 
