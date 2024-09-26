@@ -24,6 +24,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from datetime import timedelta  
 from django.utils import timezone
+from django.db.models import Count, Q 
 
 
 
@@ -138,19 +139,16 @@ class UploadStatusView(APIView):
     def get(self, request):
         now = timezone.now()
 
-        total_uploads = ImageUpload.objects.count()
-        daily_uploads = ImageUpload.objects.filter(uploaded_at__date=now.date()).count()
-        weekly_uploads = ImageUpload.objects.filter(uploaded_at__gte=now - timedelta(weeks=1)).count()
-        monthly_uploads = ImageUpload.objects.filter(uploaded_at__month=now.month).count()
-        yearly_uploads = ImageUpload.objects.filter(uploaded_at__year=now.year).count()  
+        
+        uploads = ImageUpload.objects.aggregate(
+            total_uploads=Count('id'),
+            daily_uploads=Count('id', filter=Q(uploaded_at__date=now.date())),
+            weekly_uploads=Count('id', filter=Q(uploaded_at__gte=now - timezone.timedelta(days=7))),
+            monthly_uploads=Count('id', filter=Q(uploaded_at__month=now.month)),
+            yearly_uploads=Count('id', filter=Q(uploaded_at__year=now.year)),
+        )
 
-        return Response({
-            "total_uploads": total_uploads,
-            "daily_uploads": daily_uploads,
-            "weekly_uploads": weekly_uploads,
-            "monthly_uploads": monthly_uploads,
-            "yearly_uploads": yearly_uploads,
-        }, status=status.HTTP_200_OK)
+        return Response(uploads, status=status.HTTP_200_OK)
 
     
 
