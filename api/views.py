@@ -30,6 +30,7 @@ from django.db.models import Count, Q
 
 
 
+
 logger = logging.getLogger(__name__)
 
 GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
@@ -255,3 +256,59 @@ class LoginView(APIView):
             return Response({}, status=status.HTTP_200_OK)
         logger.error(f'Login failed for user: {email}')
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class ImageUploadStatusView(APIView):
+    def get(self, request):
+        recalled_numbers = request.query_params.getlist('recalled_numbers', [])
+        
+        now = timezone.now()
+        
+        daily_start = now - timedelta(days=1)
+        weekly_start = now - timedelta(weeks=1)
+        monthly_start = now - timedelta(days=30)
+
+        recalled_count_daily = ImageUpload.objects.filter(
+            batch_number__in=recalled_numbers,
+            uploaded_at__gte=daily_start
+        ).count()
+
+        non_recalled_count_daily = ImageUpload.objects.exclude(
+            batch_number__in=recalled_numbers,
+            uploaded_at__gte=daily_start
+        ).count()
+
+        recalled_count_weekly = ImageUpload.objects.filter(
+            batch_number__in=recalled_numbers,
+            uploaded_at__gte=weekly_start
+        ).count()
+
+        non_recalled_count_weekly = ImageUpload.objects.exclude(
+            batch_number__in=recalled_numbers,
+            uploaded_at__gte=weekly_start
+        ).count()
+
+        recalled_count_monthly = ImageUpload.objects.filter(
+            batch_number__in=recalled_numbers,
+            uploaded_at__gte=monthly_start
+        ).count()
+
+        non_recalled_count_monthly = ImageUpload.objects.exclude(
+            batch_number__in=recalled_numbers,
+            uploaded_at__gte=monthly_start
+        ).count()
+
+        return Response({
+            'daily': {
+                'recalled_count': recalled_count_daily,
+                'non_recalled_count': non_recalled_count_daily,
+            },
+            'weekly': {
+                'recalled_count': recalled_count_weekly,
+                'non_recalled_count': non_recalled_count_weekly,
+            },
+            'monthly': {
+                'recalled_count': recalled_count_monthly,
+                'non_recalled_count': non_recalled_count_monthly,
+            },
+        })
