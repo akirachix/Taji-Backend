@@ -6,7 +6,7 @@ charset-normalizer==3.3.2
 cryptography==43.0.1
 dj-database-url==2.2.0
 Django==5.1.1
-django-allauth==0.64.1
+django-allauth==65.0.1
 django-cors-headers==4.4.0
 django-crontab==0.7.1
 django-stubs==5.1.0
