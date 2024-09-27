@@ -54,6 +54,9 @@ INSTALLED_APPS = [
     'recall_drugs',
     'corsheaders',
     'django_crontab',
+    'user',
+    'django.contrib.sites',
+    "allauth",
 ]
 
 MIDDLEWARE = [
@@ -66,9 +69,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
-CORS_ORIGIN_ALLOW_ALl = True
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+SITE_ID = 1
 
 
 
@@ -158,6 +165,7 @@ DEFAULT_VALUE =  json.dumps({"type":"one"})
 GOOGLE_VISION_CREDENTIALS = os.getenv('GOOGLE_VISION_CREDENTIALS',DEFAULT_VALUE)
 if GOOGLE_VISION_CREDENTIALS:
     GOOGLE_VISION_CREDENTIALS = json.loads(GOOGLE_VISION_CREDENTIALS)
+
 
 
 

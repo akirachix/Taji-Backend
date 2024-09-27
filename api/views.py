@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from google.cloud import vision
+from google.cloud import vision_v1
 from django.db.models import Q
 from google.api_core.exceptions import GoogleAPIError
 from image__upload.models import ImageUpload, DrugRecord
@@ -15,9 +15,25 @@ from recall_drugs.models import PPBData
 from .serializers import ImageUploadSerializer
 from .serializers import PPBDataSerializer, PharmacySerializer
 from django.conf import settings
+from user.models import User
+import logging
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UserSerializer
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+from datetime import timedelta  
+from django.utils import timezone
+from django.db.models import Count, Q 
+
+
+
+
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
-credentials =  vision.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
+credentials =  vision_v1.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
 
@@ -99,14 +115,14 @@ class ImageUploadView(APIView):
         ImageUpload.objects.create(image_file=image_file)
 
         if batch_number:
-            drug_record = DrugRecord.objects.filter(batch_number__iexact=batch_number.strip()).first()
-            if drug_record:
+            ppb_record = PPBData.objects.filter(batch_number__iexact=batch_number.strip()).first()
+            if ppb_record:
                 return Response({
                     "Batch_number": batch_number,
-                    "Drug_name": drug_record.drug_name,
+                    "Drug_name": ppb_record.drug_name,
                     "Recall_status": "Recalled",
-                    "Recall_date": drug_record.recall_date,
-                    "Reason_for_Recall": drug_record.reason_for_recall,
+                    "Recall_date": ppb_record.recall_date,
+                    "Reason_for_Recall": ppb_record.reason_for_recall,
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({"message": "The drug is safe to use."}, status=status.HTTP_200_OK)
@@ -118,6 +134,21 @@ class ImageUploadView(APIView):
         serializer = ImageUploadSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class UploadStatusView(APIView):
+    def get(self, request):
+        now = timezone.now()
+
+        
+        uploads = ImageUpload.objects.aggregate(
+            total_uploads=Count('id'),
+            daily_uploads=Count('id', filter=Q(uploaded_at__date=now.date())),
+            weekly_uploads=Count('id', filter=Q(uploaded_at__gte=now - timezone.timedelta(days=7))),
+            monthly_uploads=Count('id', filter=Q(uploaded_at__month=now.month)),
+            yearly_uploads=Count('id', filter=Q(uploaded_at__year=now.year)),
+        )
+
+        return Response(uploads, status=status.HTTP_200_OK)
 
     
 
@@ -168,3 +199,59 @@ class PpbDataListView(APIView):
         data = PPBData.objects.all() 
         serializer = PPBDataSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class UserListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        logger.info("Retrieved user list.")
+        return Response(serializer.data, status=status.HTTP_200_OK)
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            logger.error(f'User with ID {id} not found.')
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user)
+        logger.info(f'User with ID {id} retrieved successfully.')
+        return Response(serializer.data)
+    
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            logger.info(f'User registered successfully: {user.email}')
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        logger.error(f'User registration failed: {serializer.errors}')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+User = get_user_model()
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            logger.info(f'Login attempt for non-existent user: {email}')
+            return Response({
+                'error': 'User does not exist',
+                'signup_required': True
+            }, status=status.HTTP_404_NOT_FOUND)
+        django_user = authenticate(username=email, password=password)
+        if django_user:
+            logger.info(f'User logged in successfully: {email}')
+            return Response({}, status=status.HTTP_200_OK)
+        logger.error(f'Login failed for user: {email}')
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
