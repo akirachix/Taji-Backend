@@ -1,6 +1,7 @@
 from django.db import models
 from .utils import geocode_address
 from django.db.models import F
+from geopy.distance import distance
 from geopy.distance import geodesic
 import requests
 

@@ -8,6 +8,7 @@ click==8.0.3
 cryptography==43.0.0
 dj-database-url==2.2.0
 Django==5.0.7
+django-allauth==65.0.1
 django-cors-headers==4.4.0
 django-crontab==0.7.1
 django-heroku==0.3.1
@@ -36,4 +37,3 @@ urllib3==1.26.5
 whitenoise==6.7.0
 google-cloud-vision==3.7.4
 whitenoise==6.7.0
-django-allauth==0.64.2
