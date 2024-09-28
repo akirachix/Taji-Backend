@@ -29,8 +29,6 @@ from django.db.models import Count, Q
 
 
 
-
-
 logger = logging.getLogger(__name__)
 
 GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
@@ -261,54 +259,39 @@ class LoginView(APIView):
 class ImageUploadStatusView(APIView):
     def get(self, request):
         recalled_numbers = request.query_params.getlist('recalled_numbers', [])
-        
         now = timezone.now()
-        
-        daily_start = now - timedelta(days=1)
-        weekly_start = now - timedelta(weeks=1)
-        monthly_start = now - timedelta(days=30)
 
-        recalled_count_daily = ImageUpload.objects.filter(
-            batch_number__in=recalled_numbers,
-            uploaded_at__gte=daily_start
-        ).count()
-
-        non_recalled_count_daily = ImageUpload.objects.exclude(
-            batch_number__in=recalled_numbers,
-            uploaded_at__gte=daily_start
-        ).count()
-
-        recalled_count_weekly = ImageUpload.objects.filter(
-            batch_number__in=recalled_numbers,
-            uploaded_at__gte=weekly_start
-        ).count()
-
-        non_recalled_count_weekly = ImageUpload.objects.exclude(
-            batch_number__in=recalled_numbers,
-            uploaded_at__gte=weekly_start
-        ).count()
-
-        recalled_count_monthly = ImageUpload.objects.filter(
-            batch_number__in=recalled_numbers,
-            uploaded_at__gte=monthly_start
-        ).count()
-
-        non_recalled_count_monthly = ImageUpload.objects.exclude(
-            batch_number__in=recalled_numbers,
-            uploaded_at__gte=monthly_start
-        ).count()
-
-        return Response({
+        uploads = {
             'daily': {
-                'recalled_count': recalled_count_daily,
-                'non_recalled_count': non_recalled_count_daily,
+                'recalled_count': ImageUpload.objects.filter(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__date=now.date()
+                ).count(),
+                'non_recalled_count': ImageUpload.objects.exclude(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__date=now.date()
+                ).count(),
             },
             'weekly': {
-                'recalled_count': recalled_count_weekly,
-                'non_recalled_count': non_recalled_count_weekly,
+                'recalled_count': ImageUpload.objects.filter(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(weeks=1)
+                ).count(),
+                'non_recalled_count': ImageUpload.objects.exclude(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(weeks=1)
+                ).count(),
             },
             'monthly': {
-                'recalled_count': recalled_count_monthly,
-                'non_recalled_count': non_recalled_count_monthly,
+                'recalled_count': ImageUpload.objects.filter(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(days=30)
+                ).count(),
+                'non_recalled_count': ImageUpload.objects.exclude(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(days=30)
+                ).count(),
             },
-        })
+        }
+
+        return Response(uploads, status=status.HTTP_200_OK)
