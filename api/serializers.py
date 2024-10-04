@@ -3,7 +3,7 @@ from image__upload.models import ImageUpload,  DrugRecord
 from pharmacies.models import Pharmacy
 from recall_drugs.models import PPBData
 from django.contrib.auth.models import User as DjangoUser
-from user.models import User  # Adjust the import based on where your User model is located
+from user.models import User  
 
 
 class ImageUploadSerializer(serializers.ModelSerializer):
@@ -48,4 +48,5 @@ class UserSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
         )
         return user
+
 
