@@ -1,6 +1,7 @@
-
-
 import re
+import json
+import os
+from google.oauth2 import service_account
 import imghdr
 from rest_framework import status
 from rest_framework.response import Response
@@ -32,8 +33,6 @@ from django.db.models import Count, Q
 
 logger = logging.getLogger(__name__)
 
-GOOGLE_VISION_CREDENTIALS = settings.GOOGLE_VISION_CREDENTIALS
-credentials =  vision_v1.ImageAnnotatorClient(credentials=GOOGLE_VISION_CREDENTIALS)
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
 
@@ -44,7 +43,13 @@ def is_valid_image(file):
 
 def extract_batch_number_from_image(image_file):
     """Extract batch number from the image using Google Cloud Vision API."""
-    client = vision_v1.ImageAnnotatorClient()
+
+
+    credentials_info = settings.GOOGLE_VISION_CREDENTIALS
+    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+
+
+    client = vision_v1.ImageAnnotatorClient(credentials=credentials)
 
     try:
         image_content = image_file.read()
@@ -112,7 +117,9 @@ class ImageUploadView(APIView):
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
         ImageUpload.objects.create(image_file=image_file)
+
 
         if batch_number:
             ppb_record = PPBData.objects.filter(batch_number__iexact=batch_number.strip()).first()
@@ -129,6 +136,8 @@ class ImageUploadView(APIView):
         else:
             return Response({"error": "Batch number not valid"}, status=status.HTTP_404_NOT_FOUND)
         
+
+
     def get(self, request):
         data = ImageUpload.objects.all() 
         serializer = ImageUploadSerializer(data, many=True)
@@ -233,6 +242,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 User = get_user_model()
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -255,3 +265,46 @@ class LoginView(APIView):
             return Response({}, status=status.HTTP_200_OK)
         logger.error(f'Login failed for user: {email}')
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
+
+class ImageUploadStatusView(APIView):
+    def get(self, request):
+        recalled_numbers = request.query_params.getlist('recalled_numbers', [])
+        now = timezone.now()
+
+        uploads = {
+            'daily': {
+                'recalled_count': ImageUpload.objects.filter(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__date=now.date()
+                ).count(),
+                'non_recalled_count': ImageUpload.objects.exclude(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__date=now.date()
+                ).count(),
+            },
+            'weekly': {
+                'recalled_count': ImageUpload.objects.filter(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(weeks=1)
+                ).count(),
+                'non_recalled_count': ImageUpload.objects.exclude(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(weeks=1)
+                ).count(),
+            },
+            'monthly': {
+                'recalled_count': ImageUpload.objects.filter(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(days=30)
+                ).count(),
+                'non_recalled_count': ImageUpload.objects.exclude(
+                    batch_number__in=recalled_numbers,
+                    uploaded_at__gte=now - timezone.timedelta(days=30)
+                ).count(),
+            },
+        }
+
+        return Response(uploads, status=status.HTTP_200_OK)

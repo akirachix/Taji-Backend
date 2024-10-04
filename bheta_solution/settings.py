@@ -17,7 +17,6 @@ from dotenv import load_dotenv, find_dotenv
 import json
 import base64
 
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -121,6 +120,7 @@ if not os.getenv('DATABASE_URL'):
     }
 
 
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -159,12 +159,25 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-DEFAULT_VALUE =  json.dumps({"type":"one"})
+load_dotenv()
 
 
-GOOGLE_VISION_CREDENTIALS = os.getenv('GOOGLE_VISION_CREDENTIALS',DEFAULT_VALUE)
-if GOOGLE_VISION_CREDENTIALS:
+DEFAULT_GOOGLE_VISION_CREDENTIALS = '{}'
+
+
+GOOGLE_VISION_CREDENTIALS = os.getenv('GOOGLE_VISION_CREDENTIALS', DEFAULT_GOOGLE_VISION_CREDENTIALS)
+
+
+try:
     GOOGLE_VISION_CREDENTIALS = json.loads(GOOGLE_VISION_CREDENTIALS)
+except json.JSONDecodeError as e:
+    print(f"Error decoding GOOGLE_VISION_CREDENTIALS: {e}")
+    GOOGLE_VISION_CREDENTIALS = None  
+
+if GOOGLE_VISION_CREDENTIALS:
+    print("Google Vision API credentials loaded successfully.")
+else:
+    print("Failed to load Google Vision API credentials. Check your .env configuration.")
 
 
 
@@ -174,6 +187,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
-
 
 
