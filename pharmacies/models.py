@@ -9,12 +9,15 @@ import requests
 
 
 class Pharmacy(models.Model):
-    pharmacyName = models.CharField(max_length=255)
-    county = models.CharField(max_length=100)
-    town = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    license_status = models.CharField(max_length=255)
+    reported=models.BooleanField(max_length=100)
 
     def __str__(self):
-        return self.pharmacyName
+        return self.name
 
 
     def save(self, *args, **kwargs):
