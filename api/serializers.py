@@ -9,7 +9,7 @@ from user.models import User
 class ImageUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageUpload
-        fields = "__all__"
+        fields = ['id', 'image_file', 'batch_number','uploaded_at']
         
 
 class PharmacySerializer(serializers.ModelSerializer):
