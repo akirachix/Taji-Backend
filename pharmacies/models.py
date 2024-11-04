@@ -8,7 +8,6 @@ import requests
 
 
 
-
 class Pharmacy(models.Model):
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
@@ -16,6 +15,9 @@ class Pharmacy(models.Model):
     longitude = models.FloatField(null=True, blank=True)
     license_status = models.CharField(max_length=255)
     reported=models.BooleanField(max_length=100)
+
+    def __str__(self):
+        return self.name
 
 
     def save(self, *args, **kwargs):
