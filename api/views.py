@@ -209,21 +209,6 @@ class ImageUploadView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def get(self, request):
         try:
             data = ImageUpload.objects.all().order_by('-uploaded_at')  
@@ -235,10 +220,6 @@ class ImageUploadView(APIView):
                 {"error": "Failed to retrieve images"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-
-
-
 
 
 
