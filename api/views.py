@@ -100,6 +100,7 @@ def extract_batch_number_from_image(image_file):
         
         patterns = [
             r"Batch\s*No\.?\s*[:.]?\s*([A-Z0-9]{5,15})",
+            r"LOT\s*[:.]?\s*([A-Z0-9]+)",
             r"B\.?\s*No\.?\s*[:.]?\s*([A-Z0-9]{5,15})",
             r"Batch\s*Number\s*[:.]?\s*([A-Z0-9]{5,15})",
             r"Lot\s*No\.?\s*[:.]?\s*([A-Z0-9]{5,15})",
@@ -190,11 +191,11 @@ class ImageUploadView(APIView):
                 error_message = str(e)
                 if "No text found in the image" in error_message:
                     return Response({
-                        "error": "Batch number not valid"
+                        "error": "Batch number not found"
                     }, status=status.HTTP_404_NOT_FOUND)
                 elif "No batch number found in the image" in error_message:
                     return Response({
-                        "error": "Batch number not valid"
+                        "error": "Batch number not found"
                     }, status=status.HTTP_404_NOT_FOUND)
                 else:
                     raise e
@@ -207,6 +208,18 @@ class ImageUploadView(APIView):
                 {"error": "An unexpected error occurred"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
